@@ -1,9 +1,13 @@
 import client from './client'
 
 export const ingestRepo = (repoUrl) => {
-  return client.post('/api/ingest/uri', {
+  return client.post(
+    '/api/ingest/uri',
+    null,
+    {
     params: { q: repoUrl },
-  })
+    }
+  )
 }
 
 export const askQuestion = (question, namespace = 'default') => {
