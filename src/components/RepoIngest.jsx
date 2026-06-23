@@ -25,7 +25,7 @@ export function addNamespace(namespace) {
 // Derive a clean namespace from a GitHub URL → "username/repo"
 function deriveNamespace(url) {
   
-  return url.substring(url.lastIndexOf("/"))
+  return url.substring(url.lastIndexOf("/")+1)
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
