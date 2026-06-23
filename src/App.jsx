@@ -2,16 +2,30 @@ import RepoIngest from './components/RepoIngest'
 import ChatInterface from './components/ChatInterface'
 import './App.css'
 
+
 function App() {
 
-  const [repositories, setRepositories] = useState([]);
+ const [repositories, setRepositories] = useState(() => {
+    return JSON.parse(localStorage.getItem('repositories')) || []
+  })
 
-  const addRepository = (namespace) => {
+  const handleRepoAdd = (namespace) => {
     setRepositories(prev => {
-      if (prev.includes(namespace)) return prev;
-      return [...prev, namespace];
-    });
-  };        
+
+      if (prev.includes(namespace)) {
+        return prev
+      }
+
+      const updated = [...prev, namespace]
+
+      localStorage.setItem(
+        'repositories',
+        JSON.stringify(updated)
+      )
+
+      return updated
+    })
+  }     
 
   return (
     <div className="app">
@@ -22,7 +36,7 @@ function App() {
 
       <main className="app-main">
         <aside className="sidebar">
-          <RepoIngest onRepoAdded={addRepository}/>
+          <RepoIngest onRepoAdded={handleRepoAdd}/>
 
           <div className="info-card">
             <h3>How it works</h3>

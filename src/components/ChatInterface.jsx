@@ -1,80 +1,132 @@
 import { useState, useRef, useEffect } from 'react'
-import { Send, Bot, User, Loader2, FileCode, Zap, Database } from 'lucide-react'
+import {
+  Send,
+  Bot,
+  User,
+  Loader2,
+  FileCode,
+  Zap,
+  Database
+} from 'lucide-react'
+
 import { askQuestion } from '../api/services'
 
-export default function ChatInterface() {
+export default function ChatInterface({ repositories }) {
+
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
-  const [namespace, setNamespace] = useState('E-Wallet-Backend') // <-- default to your repo
+  const [namespace, setNamespace] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+
   const messagesEndRef = useRef(null)
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
+  useEffect(() => {
+    if (
+      repositories.length > 0 &&
+      !namespace
+    ) {
+      setNamespace(repositories[0])
+    }
+  }, [repositories, namespace])
 
   useEffect(() => {
-    scrollToBottom()
+    messagesEndRef.current?.scrollIntoView({
+      behavior: 'smooth'
+    })
   }, [messages])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!input.trim() || isLoading) return
+
+    if (
+      !input.trim() ||
+      isLoading ||
+      !namespace
+    ) {
+      return
+    }
 
     const userMsg = input.trim()
+
     setInput('')
-    setMessages((prev) => [...prev, { type: 'user', content: userMsg }])
+    setMessages(prev => [
+      ...prev,
+      {
+        type: 'user',
+        content: userMsg
+      }
+    ])
+
     setIsLoading(true)
 
     try {
-      const { data } = await askQuestion(userMsg, namespace) // <-- pass namespace
 
-      setMessages((prev) => [
+      const { data } =
+        await askQuestion(
+          userMsg,
+          namespace
+        )
+
+      setMessages(prev => [
         ...prev,
         {
           type: 'bot',
           content: data.answer,
-          citations: data.citations || [],
-          fromCache: data.fromCache,
-          latencyMs: data.latencyMs,
-        },
+          citations:
+            data.citations || [],
+          fromCache:
+            data.fromCache,
+          latencyMs:
+            data.latencyMs
+        }
       ])
+
     } catch (err) {
-      setMessages((prev) => [
+
+      setMessages(prev => [
         ...prev,
         {
           type: 'error',
-          content: err.response?.data?.message || 'Failed to get response',
-        },
+          content:
+            err.response?.data?.message ||
+            'Failed to get response'
+        }
       ])
+
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="chat-container">
-      <div className="chat-header">
-        <Bot size={24} />
-        <div>
-          <h2>Codebase Q&A</h2>
-          <span className="subtitle">Ask questions about your ingested repositories</span>
-        </div>
-      </div>
-
-      {/* Namespace selector */}
+    <div>
       <div className="namespace-bar">
         <Database size={14} />
+
         <label>Namespace:</label>
+
         <select
           value={namespace}
-          onChange={(e) => setNamespace(e.target.value)}
+          onChange={(e) =>
+            setNamespace(
+              e.target.value
+            )
+          }
         >
-          {repositories.map(repo => (
-            <option key={repo} value={repo}>
-              {repo}
+          {repositories.length === 0 ? (
+            <option value="">
+              No repositories
             </option>
-          ))}
+          ) : (
+            repositories.map(repo => (
+              <option
+                key={repo}
+                value={repo}
+              >
+                {repo}
+              </option>
+            ))
+          )}
         </select>
       </div>
 
