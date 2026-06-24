@@ -11,7 +11,7 @@ export const ingestRepo = (repoUrl) => {
 }
 
 export const askQuestion = (question, namespace = 'default') => {
-  return client.post('/api/chat/query', {
+  return client.post('/api/chat/stream', {
     question,
     namespace,
   })
