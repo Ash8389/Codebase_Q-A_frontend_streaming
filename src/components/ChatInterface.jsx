@@ -117,7 +117,7 @@ export default function ChatInterface({ latestNamespace }) {
   setMessages(prev => [
     ...prev,
     { type: 'user', content: userMsg },
-    { type: 'bot', content: '' } // placeholder
+    { type: 'bot', content: '' }
   ]);
 
   const eventSource = new EventSource(
