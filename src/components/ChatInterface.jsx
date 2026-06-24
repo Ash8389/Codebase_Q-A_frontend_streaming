@@ -10,10 +10,6 @@ function readSelected() {
 }
 
 export default function ChatInterface({ latestNamespace }) {
-
-
-  // const { data } = await askQuestion(userMsg, namespace)
-
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -69,79 +65,39 @@ export default function ChatInterface({ latestNamespace }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault()
-  //   if (!input.trim() || isLoading) return
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!input.trim() || isLoading) return
 
-  //   const userMsg = input.trim()
-  //   setInput('')
-  //   setMessages((prev) => [...prev, { type: 'user', content: userMsg }])
-  //   setIsLoading(true)
+    const userMsg = input.trim()
+    setInput('')
+    setMessages((prev) => [...prev, { type: 'user', content: userMsg }])
+    setIsLoading(true)
 
-  //   try {
-  //     const { data } = await askQuestion(userMsg, namespace)
-  //     setMessages((prev) => [
-  //       ...prev,
-  //       {
-  //         type: 'bot',
-  //         content: data.answer,
-  //         citations: data.citations || [],
-  //         fromCache: data.fromCache,
-  //         latencyMs: data.latencyMs,
-  //       },
-  //     ])
-  //   } catch (err) {
-  //     setMessages((prev) => [
-  //       ...prev,
-  //       {
-  //         type: 'error',
-  //         content: err.response?.data?.message || 'Failed to get response',
-  //       },
-  //     ])
-  //   } finally {
-  //     setIsLoading(false)
-  //   }
-  // }
-
-
-  const handleSubmit = (e) => {
-  e.preventDefault();
-
-  if (!input.trim() || isLoading) return;
-
-  const userMsg = input.trim();
-
-  setInput('');
-  setIsLoading(true);
-
-  setMessages(prev => [
-    ...prev,
-    { type: 'user', content: userMsg },
-    { type: 'bot', content: '' }
-  ]);
-
-  const eventSource = new EventSource(
-    `/api/chat/stream?question=${encodeURIComponent(userMsg)}&namespace=${namespace}`
-  );
-
-  eventSource.addEventListener('token', (event) => {
-    setMessages(prev => {
-      const updated = [...prev];
-      updated[updated.length - 1].content += event.data;
-      return [...updated];
-    });
-  });
-
-  eventSource.addEventListener('done', () => {
-    eventSource.close();
-    setIsLoading(false);
-  });
-
-  eventSource.onerror = () => {
-    eventSource.close();
-    setIsLoading(false);
-  };
-};
+    try {
+      const { data } = await askQuestion(userMsg, namespace)
+      setMessages((prev) => [
+        ...prev,
+        {
+          type: 'bot',
+          content: data.answer,
+          citations: data.citations || [],
+          fromCache: data.fromCache,
+          latencyMs: data.latencyMs,
+        },
+      ])
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          type: 'error',
+          content: err.response?.data?.message || 'Failed to get response',
+        },
+      ])
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <div className="chat-container">

@@ -10,15 +10,9 @@ export const ingestRepo = (repoUrl) => {
   )
 }
 
-// export const askQuestion = (question, namespace = 'default') => {
-//   return client.get('/api/chat/stream', {
-//     question,
-//     namespace,
-//   })
-// }
-
-export const askQuestionStream = (question, namespace = 'default') => {
-  return new EventSource(
-    `/api/chat/stream?question=${encodeURIComponent(question)}&namespace=${encodeURIComponent(namespace)}`
-  )
+export const askQuestion = (question, namespace = 'default') => {
+  return client.post('/api/chat/query', {
+    question,
+    namespace,
+  })
 }
