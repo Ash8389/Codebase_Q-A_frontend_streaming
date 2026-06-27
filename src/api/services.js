@@ -82,9 +82,6 @@ export const askQuestionStream = async (question, namespace = 'default', { onTok
           currentEventName = line.slice(6).trim()
         } else if (line.startsWith('data:')) {
           let data = line.slice(5)
-          if (data.startsWith(' ')) {
-            data = data.slice(1)
-          }
           currentDataValue = currentDataValue ? currentDataValue + '\n' + data : data
         }
       }
