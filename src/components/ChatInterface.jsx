@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Send, Bot, User, Loader2, FileCode, Zap, Database, ChevronDown, Trash2 } from 'lucide-react'
-import { askQuestion } from '../api/services'
+import { askQuestionStream } from '../api/services'
 import { getStoredNamespaces, NAMESPACES_KEY } from './RepoIngest'
 
 const NS_SELECTED_KEY = 'selected_namespace'
@@ -74,27 +74,81 @@ export default function ChatInterface({ latestNamespace }) {
     setMessages((prev) => [...prev, { type: 'user', content: userMsg }])
     setIsLoading(true)
 
+    let botResponse = ''
+    let hasAddedBotMessage = false
+
     try {
-      const { data } = await askQuestion(userMsg, namespace)
-      setMessages((prev) => [
-        ...prev,
-        {
-          type: 'bot',
-          content: data.answer,
-          citations: data.citations || [],
-          fromCache: data.fromCache,
-          latencyMs: data.latencyMs,
+      await askQuestionStream(userMsg, namespace, {
+        onToken: (token) => {
+          botResponse += token
+          
+          if (!hasAddedBotMessage) {
+            hasAddedBotMessage = true
+            setMessages((prev) => [
+              ...prev,
+              { type: 'bot', content: botResponse, isStreaming: true }
+            ])
+          } else {
+            setMessages((prev) => {
+              const updated = [...prev]
+              const lastMsg = updated[updated.length - 1]
+              if (lastMsg && lastMsg.type === 'bot') {
+                updated[updated.length - 1] = {
+                  ...lastMsg,
+                  content: botResponse,
+                }
+              }
+              return updated
+            })
+          }
         },
-      ])
+        onComplete: () => {
+          setMessages((prev) => {
+            const updated = [...prev]
+            const lastMsg = updated[updated.length - 1]
+            if (lastMsg && lastMsg.type === 'bot') {
+              updated[updated.length - 1] = {
+                ...lastMsg,
+                isStreaming: false,
+              }
+            }
+            return updated
+          })
+          setIsLoading(false)
+        },
+        onError: (err) => {
+          if (!hasAddedBotMessage) {
+            setMessages((prev) => [
+              ...prev,
+              {
+                type: 'error',
+                content: err.message || 'Failed to get response',
+              }
+            ])
+          } else {
+            setMessages((prev) => {
+              const updated = [...prev]
+              const lastMsg = updated[updated.length - 1]
+              if (lastMsg && lastMsg.type === 'bot') {
+                updated[updated.length - 1] = {
+                  ...lastMsg,
+                  isStreaming: false,
+                }
+              }
+              return updated
+            })
+          }
+          setIsLoading(false)
+        }
+      })
     } catch (err) {
       setMessages((prev) => [
         ...prev,
         {
           type: 'error',
-          content: err.response?.data?.message || 'Failed to get response',
+          content: err.message || 'Failed to get response',
         },
       ])
-    } finally {
       setIsLoading(false)
     }
   }
@@ -200,7 +254,7 @@ export default function ChatInterface({ latestNamespace }) {
           </div>
         ))}
 
-        {isLoading && (
+        {isLoading && messages[messages.length - 1]?.type !== 'bot' && (
           <div className="message bot loading">
             <div className="message-avatar"><Bot size={18} /></div>
             <div className="typing-indicator">
